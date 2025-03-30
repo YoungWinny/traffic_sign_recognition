@@ -17,7 +17,7 @@ def main():
 
     # Check command-line arguments
     if len(sys.argv) not in [2, 3]:
-        sys.exit("Usage: python traffic.py data_directory [model.h5]")
+        sys.exit("Usage: python traffic.py data_directory [best_model.h5]")
 
     # Get image arrays and labels for all image files
     images, labels = load_data(sys.argv[1])
@@ -58,34 +58,31 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
-
-
     images = []
     labels = []
+
     for category in range(NUM_CATEGORIES):
         category_path = os.path.join(data_dir, str(category))
         
-        
+        # Ensure the category directory exists
         if not os.path.isdir(category_path):
             continue
 
         for filename in os.listdir(category_path):
             img_path = os.path.join(category_path, filename)
             
-            
+            # Read and process image
             image = cv2.imread(img_path)
             if image is None:
                 continue
             
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  
-            image = cv2.resize(image, (IMG_WIDTH, IMG_HEIGHT)) 
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
+            image = cv2.resize(image, (IMG_WIDTH, IMG_HEIGHT))  # Resize
             
             images.append(image)
             labels.append(category)
 
     return images, labels
-
-    # raise NotImplementedError
 
 
 def get_model():
@@ -95,22 +92,23 @@ def get_model():
     The output layer should have `NUM_CATEGORIES` units, one for each category.
     """
     model = tf.keras.models.Sequential([
-       
+        # First convolutional layer
         tf.keras.layers.Conv2D(32, (3, 3), activation="relu", input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)),
         tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
 
-       
+        # Second convolutional layer
         tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
         tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
 
-       
+        # Flatten and fully connected layers
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(128, activation="relu"),
-        tf.keras.layers.Dropout(0.5), 
+        tf.keras.layers.Dropout(0.5),  # Dropout to prevent overfitting
         tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")  # Output layer
     ])
 
-  
+
+    # Compile model
     model.compile(
         optimizer="adam",
         loss="categorical_crossentropy",
@@ -118,7 +116,6 @@ def get_model():
     )
 
     return model
-    # raise NotImplementedError
 
 
 if __name__ == "__main__":
